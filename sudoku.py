@@ -6,13 +6,13 @@ def solve_6x6_sudoku(board: Grid, box_r: int = 2, box_c: int = 3) -> Optional[Gr
     N = 6
     DIGITS = set(range(1, N + 1))
 
-    # Basic validation
+    # check to see if the board is valid 
     if len(board) != N or any(len(row) != N for row in board):
         raise ValueError("Board must be 6x6.")
     if box_r * box_c != N:
         raise ValueError("For a 6x6 Sudoku, box_r * box_c must equal 6 (e.g., 2x3 or 3x2).")
 
-    # Precompute peers for each cell (same row, col, or box)
+    # calc possible numebrs
     peers = {}
     for r in range(N):
         for c in range(N):
@@ -31,10 +31,13 @@ def solve_6x6_sudoku(board: Grid, box_r: int = 2, box_c: int = 3) -> Optional[Gr
             peers[(r, c)] = ps
 
     def candidates(b: Grid, r: int, c: int) -> Set[int]:
+        # used means the values already present in the peer columns or rows or boxes, basically the numbers given
+        #candidates = DIGITS - used basically all possible numbers from what you are given
         used = {b[rr][cc] for (rr, cc) in peers[(r, c)] if b[rr][cc] != 0}
         return DIGITS - used
 
     def propagate_naked_singles(b: Grid) -> bool:
+        # for every cell not filled it looks at if you need logic to make a choice, if it takes logic then it moves on, basically it is looking for the forced moves
         changed = True
         while changed:
             changed = False
@@ -50,7 +53,7 @@ def solve_6x6_sudoku(board: Grid, box_r: int = 2, box_c: int = 3) -> Optional[Gr
         return True
 
     def find_mrv_cell(b: Grid) -> Optional[Tuple[int, int, Set[int]]]:
-        
+        #trying to find the best spot to start guessing, spot with 2 guesses is better than one with 5
         best = None
         best_cand = None
         for r in range(N):
@@ -69,6 +72,8 @@ def solve_6x6_sudoku(board: Grid, box_r: int = 2, box_c: int = 3) -> Optional[Gr
         return (best[0], best[1], best_cand)
 
     def backtrack(b: Grid) -> Optional[Grid]:
+        # finds slot with lowest number of guesses and starts there, backtest is depth first search so it selects a guess then runs with it until contradiction
+        #if no contradiction then solved but if there is then move to next guess
         if not propagate_naked_singles(b):
             return None
 
